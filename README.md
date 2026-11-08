@@ -29,22 +29,22 @@ Validation picks settings and the final model. The test set is scored once, afte
 
 ## Results
 
-### Test set ([n] users, full slates)
+### Test set (17,176 users, full slates)
 
 | Model | Hit@10 | NDCG@10 | MRR | P@1 |
 |---|---|---|---|---|
-| Random | [ ] | [ ] | [ ] | [ ] |
-| Query only | [ ] | [ ] | [ ] | [ ] |
-| Popularity | [ ] | [ ] | [ ] | [ ] |
-| Repeat → popularity | [ ] | [ ] | [ ] | [ ] |
-| MF (truncated SVD) | [ ] | [ ] | [ ] | [ ] |
-| Team 3 NCF (as published) | [ ] | [ ] | [ ] | [ ] |
-| Team 3 NCF (fixed: P(engaged)) | [ ] | [ ] | [ ] | [ ] |
-| LightGBM binary (BCE) | [ ] | [ ] | [ ] | [ ] |
-| LightGBM LambdaRank | [ ] | [ ] | [ ] | [ ] |
-| Attention hybrid (DIN-style) | [ ] | [ ] | [ ] | [ ] |
+| Random | 0.2220 | 0.0812 | 0.0991 | 0.0296 |
+| Query only | 0.2388 | 0.0931 | 0.1081 | 0.0367 |
+| Team 3 NCF (as published) | 0.2538 | 0.1053 | 0.1189 | 0.0454 |
+| Team 3 NCF (fixed: P(engaged)) | 0.4427 | 0.2134 | 0.2188 | 0.1124 |
+| MF (truncated SVD) | 0.6017 | 0.3191 | 0.3210 | 0.1888 |
+| Popularity | 0.6343 | 0.3395 | 0.3362 | 0.1982 |
+| Repeat → popularity (best baseline) | 0.6762 | 0.3840 | 0.3875 | 0.2488 |
+| Attention hybrid (DIN-style) | 0.7065 | 0.4038 | 0.4035 | 0.2613 |
+| LightGBM binary (BCE) | 0.7179 | 0.4121 | 0.4125 | 0.2689 |
+| **LightGBM LambdaRank (final)** | **0.7190** | **0.4146** | **0.4145** | **0.2707** |
 
-**Final model:** [ ]
+**Final model: LightGBM LambdaRank**, picked on validation. On test it beats the best baseline (repeat → popularity) by +0.0428 Hit@10 (95% CI +0.0381 to +0.0479) and +0.0306 NDCG@10 (+0.0280 to +0.0331). Its edge over LightGBM BCE on test is proven for NDCG@10 only (+0.0025, CI +0.0010 to +0.0040; Hit@10 +0.0012, CI −0.0019 to +0.0041).
 
 ### Validation set (17,172 users, full slates)
 
@@ -57,28 +57,26 @@ Validation picks settings and the final model. The test set is scored once, afte
 | MF (truncated SVD) | 0.6029 | 0.3196 | 0.3181 | 0.1837 |
 | Popularity | 0.6437 | 0.3448 | 0.3388 | 0.1972 |
 | Repeat → popularity (best baseline) | 0.6813 | 0.3856 | 0.3869 | 0.2463 |
-| Attention hybrid (DIN-style) | 0.7103 | 0.4057 | 0.4051 | 0.2616 |
+| Attention hybrid (DIN-style) | 0.7130 | 0.4065 | 0.4054 | 0.2617 |
 | LightGBM binary (BCE) | 0.7188 | 0.4146 | 0.4155 | 0.2717 |
-| LightGBM LambdaRank | 0.7213 | 0.4167 | 0.4173 | 0.2745 |
+| LightGBM LambdaRank | 0.7231 | 0.4168 | 0.4169 | 0.2735 |
 
-Paired comparisons (bootstrap 95% CIs over users) are in each notebook's Results section and in `results/`.
+Paired comparisons (bootstrap 95% CIs over users) are in each notebook's Results section and in `step4_blend_and_segments.ipynb`.
 
 ---
 
 ## Repository structure
 
 ```
-bt4222-g15-jdsearch/
-├── README.md                      overview, results, data links, run instructions
-├── requirements.txt               packages beyond Colab defaults
-├── step0_eda.ipynb                interim-report data analysis
-├── step1_data_preprocess.ipynb    cleaning, user split, 65 features
-├── step2_baselines.ipynb          non-personalised baselines + Team 3 NCF re-run
-├── step3_lightgbm.ipynb           LightGBM binary (BCE)
-├── step3_lambdarank.ipynb         LightGBM LambdaRank
-├── step3_attention.ipynb          DIN-style attention hybrid + ablations
-├── results/                       final result tables (CSV) from each notebook
-└── docs/                          architecture diagrams, attention decision log
+bt4222-group15-jdsearch/
+├── README.md                        overview, results, data links, run instructions
+├── requirements.txt                 packages beyond Colab defaults
+├── step1_data_preprocess.ipynb      cleaning, user split, 65 features
+├── step2_baselines.ipynb            non-personalised baselines + Team 3 NCF re-run
+├── step3_lightgbm.ipynb             LightGBM binary (BCE)
+├── step3_lambdarank.ipynb           LightGBM LambdaRank (final model)
+├── step3_attention.ipynb            DIN-style attention hybrid + ablations
+└── step4_blend_and_segments.ipynb   blend test, history-length segments, paired test comparisons
 ```
 
 Data and trained models are too large for GitHub and are linked from Google Drive (see [Data](#data)).
@@ -89,14 +87,14 @@ Data and trained models are too large for GitHub and are linked from Google Driv
 
 Run the notebooks in this order. Each later step reads the files the earlier steps save.
 
-| Notebook | What it does | Reads | Writes | Colab runtime | Run time |
-|---|---|---|---|---|---|
-| `step0_eda.ipynb` | Data analysis behind the interim report: slates, funnel, logging windows, sparsity | JDSearch_raw | none | High-RAM CPU | [ ] |
-| `step1_data_preprocess.ipynb` | Drops no-engagement slates, shuffles candidates, drops actions logged 1 s before the search, splits users, builds the 65 features | JDSearch_raw | BT4222_artifacts | High-RAM CPU | [ ] |
-| `step2_baselines.ipynb` | Random, query only, popularity, repeat → popularity, MF, and Team 3's NCF re-run on full slates | BT4222_artifacts | baseline_scores.parquet, Team 3 model | GPU | [ ] |
-| `step3_lightgbm.ipynb` | LightGBM binary (BCE), early-stopped on validation NDCG@10 | BT4222_artifacts | its results folder, lgbm_scores_val.parquet | CPU | [ ] |
-| `step3_lambdarank.ipynb` | Same model with a LambdaRank (listwise) loss; paired comparison with BCE | BT4222_artifacts | BT4222_step3_lambdarank | CPU | about 8 min training |
-| `step3_attention.ipynb` | DIN-style target attention over the user's history, joined with the 65 features; ablations and attention-weight analysis | BT4222_artifacts, history_full.parquet | BT4222_step3_attention | GPU | [ ] |
+| Notebook | What it does | Reads | Writes | Colab runtime |
+|---|---|---|---|---|
+| `step1_data_preprocess.ipynb` | Drops no-engagement slates, shuffles candidates, drops actions logged 1 s before the search, splits users, builds the 65 features | JDSearch_raw | BT4222_artifacts | High-RAM CPU |
+| `step2_baselines.ipynb` | Random, query only, popularity, repeat → popularity, MF, and Team 3's NCF re-run on full slates | BT4222_artifacts | baseline_scores.parquet, Team 3 model | GPU |
+| `step3_lightgbm.ipynb` | LightGBM binary (BCE), early-stopped on validation NDCG@10 | BT4222_artifacts | a new results folder, lgbm_scores_val.parquet | CPU |
+| `step3_lambdarank.ipynb` | Same model with a LambdaRank (listwise) loss; paired comparison with BCE | BT4222_artifacts | a new results folder | CPU |
+| `step3_attention.ipynb` | DIN-style target attention over the user's history, joined with the 65 features; ablations and attention-weight analysis | BT4222_artifacts (incl. history_full.parquet) | BT4222_step3_attention (your My Drive) | GPU, High-RAM |
+| `step4_blend_and_segments.ipynb` | Trains nothing: reads the frozen models' saved scores; blend test, history-length segments, paired test comparisons | the results folders below | a new results folder | CPU |
 
 ### Models
 
@@ -110,15 +108,17 @@ Run the notebooks in this order. Each later step reads the files the earlier ste
 
 The raw data and all intermediate files are on Google Drive with view-only access.
 
+**Project Drive folder:** [BT4222-Group-15](https://drive.google.com/drive/folders/1YpCRQtsc8dqPi6Q4E9yTfc0wOkpCJ3Z8)
+
 **Raw data:** JDsearch (Liu et al., 2023), https://github.com/rucliujn/JDsearch
-Our copy: [Drive link to JDSearch_raw]
+Our copy: [JDSearch_raw](https://drive.google.com/drive/folders/1lverviGxkyR-0tBxU9DkUjWE8QhcigMH)
 
 | File | Size | What it is | Made by |
 |---|---|---|---|
 | product_meta_data.txt | 4.84 GB | Product metadata: name terms, brand, 4-level category, shop | Raw |
 | user_behavior_data.txt | 957 MB | Each user's last search, the slate shown with labels, and their history | Raw |
 
-**Preprocessing artifacts:** [Drive link to BT4222_artifacts]
+**Preprocessing artifacts:** [BT4222_artifacts](https://drive.google.com/drive/folders/1Yb4AGglIJV4Pdd8Sx6NozG8Klh6uweqH)
 
 | File | Size | What it is | Made by |
 |---|---|---|---|
@@ -130,12 +130,14 @@ Our copy: [Drive link to JDSearch_raw]
 | baseline_scores.parquet | 115 MB | Validation and test scores for every baseline | step 2 |
 | lgbm_scores_val.parquet | 23 MB | LightGBM BCE validation scores, the reference for paired tests | step 3 LightGBM |
 
-**Results folders:**
+**Results folders** (frozen 8 Nov models; each holds the model or scores and the result tables):
 
-- LightGBM: [Drive link]
-- LambdaRank: [Drive link to BT4222_step3_lambdarank]
-- Attention: [Drive link to BT4222_step3_attention]
-- Test runs: [Drive link]
+| Model | Validation run | Test run |
+|---|---|---|
+| LightGBM BCE | [BT4222_step3_lightgbm_val_08Nov_1257](https://drive.google.com/drive/folders/1EViXhlYkmQimuiweUwvYA9zfKTSSCplk) | [BT4222_step3_lightgbm_test_08Nov_1659](https://drive.google.com/drive/folders/1kwtdu8iMbjC9Onbe_LVxv0PedT10fiMG) |
+| LightGBM LambdaRank (final) | [BT4222_step3_lambdarank_val_08Nov_1356](https://drive.google.com/drive/folders/1y1SQ2aQJikO7vesszwMkB9w9PuFhtab9) | [BT4222_step3_lambdarank_test_08Nov_1704](https://drive.google.com/drive/folders/1Ha380qwaIziWaLlDphdnoD3Hln1f-meV) |
+| Attention hybrid | [BT4222_step3_attention_val_08Nov](https://drive.google.com/drive/folders/1kbxHt6ku79o8mJaxkRPllmm0bmLRQSLe) | [BT4222_step3_attention_test_08Nov](https://drive.google.com/drive/folders/1IIccC_KDGtqLy2wIv3OGsnBiOu30JOOU) |
+| Step 4 (blend, segments, paired tests) | [BT4222_step4_blend_and_segments_08Nov_1808](https://drive.google.com/drive/folders/1n-H5OqDIlhuvufG1PA-tvxe-8KPNCmsI) | (same folder) |
 
 ---
 
@@ -145,12 +147,12 @@ Every notebook is saved with its outputs, so results can be read without running
 
 | Notebook | Open | Runtime |
 |---|---|---|
-| step0_eda | [Open in Colab](https://colab.research.google.com/github/USERNAME/bt4222-g15-jdsearch/blob/main/step0_eda.ipynb) | High-RAM CPU |
-| step1_data_preprocess | [Open in Colab](https://colab.research.google.com/github/USERNAME/bt4222-g15-jdsearch/blob/main/step1_data_preprocess.ipynb) | High-RAM CPU |
-| step2_baselines | [Open in Colab](https://colab.research.google.com/github/USERNAME/bt4222-g15-jdsearch/blob/main/step2_baselines.ipynb) | GPU |
-| step3_lightgbm | [Open in Colab](https://colab.research.google.com/github/USERNAME/bt4222-g15-jdsearch/blob/main/step3_lightgbm.ipynb) | CPU |
-| step3_lambdarank | [Open in Colab](https://colab.research.google.com/github/USERNAME/bt4222-g15-jdsearch/blob/main/step3_lambdarank.ipynb) | CPU |
-| step3_attention | [Open in Colab](https://colab.research.google.com/github/USERNAME/bt4222-g15-jdsearch/blob/main/step3_attention.ipynb) | GPU |
+| step1_data_preprocess | [Open in Colab](https://colab.research.google.com/github/tyadollaz/bt4222-group15-jdsearch/blob/main/step1_data_preprocess.ipynb) | High-RAM CPU |
+| step2_baselines | [Open in Colab](https://colab.research.google.com/github/tyadollaz/bt4222-group15-jdsearch/blob/main/step2_baselines.ipynb) | GPU |
+| step3_lightgbm | [Open in Colab](https://colab.research.google.com/github/tyadollaz/bt4222-group15-jdsearch/blob/main/step3_lightgbm.ipynb) | CPU |
+| step3_lambdarank | [Open in Colab](https://colab.research.google.com/github/tyadollaz/bt4222-group15-jdsearch/blob/main/step3_lambdarank.ipynb) | CPU |
+| step3_attention | [Open in Colab](https://colab.research.google.com/github/tyadollaz/bt4222-group15-jdsearch/blob/main/step3_attention.ipynb) | GPU, High-RAM |
+| step4_blend_and_segments | [Open in Colab](https://colab.research.google.com/github/tyadollaz/bt4222-group15-jdsearch/blob/main/step4_blend_and_segments.ipynb) | CPU |
 
 To run a notebook:
 
@@ -169,7 +171,8 @@ To run a notebook:
 | `LEAK_GUARD_SECONDS` | 1 | Drop history actions logged 1 s before the search (possible leakage) |
 | `SEED` | 42 | Fixed seed for splits, sampling and training |
 | `RUN_TUNING` | False | Use the chosen hyperparameters; set True to rerun the search |
-| `RUN_TEST` | False | Keep False unless reproducing the final test scores |
+| `RUN_TEST` | True in the saved step 3 notebooks | Test was scored once (8 Nov), after the final model was picked on validation; the saved outputs include it |
+| `LOAD_MODEL_FROM` | the frozen 8 Nov validation run | LightGBM BCE and LambdaRank load the saved model from that results folder instead of retraining |
 
 ---
 
